@@ -333,7 +333,7 @@ let historyLoaded = false;
 async function api(path, opts = {}) {
   const r = await fetch(API_BASE + path, { ...opts, headers: { ...H, ...(opts.headers||{}) } });
   const d = await r.json();
-  if (!r.ok) throw new Error(JSON.stringify(d));
+  if (!r.ok) throw new Error(d.message || 'Request gagal');
   return d;
 }
 
@@ -386,7 +386,7 @@ function productCard(p) {
     <div class="product-img">${img}</div>
     <div class="product-body">
       <div class="product-name">${esc(p.name)}</div>
-      <div class="product-meta">${hasStock ? 'ab ' + rp(minPrice) : '⛔ Habis'} · ${vars.length} var</div>
+      <div class="product-meta">${hasStock ? 'Rp ' + rp(minPrice) : '⛔ Habis'} · ${vars.length} var</div>
     </div>
     <div class="product-arrow">→</div>
   </div>`;
@@ -421,7 +421,7 @@ function variantRow(v) {
       <div class="v-meta">${oos ? '⛔ Stok habis' : 'Stok: ' + v.stock}</div>
       <span class="v-process-badge badge-${esc(proc)}">${procLabel}</span>
     </div>
-    <div class="v-price">${oos ? '—' : rp(v.price)}</div>
+    <div class="v-price">${oos ? '—' : 'Rp ' + rp(v.price)}</div>
   </div>`;
 }
 
@@ -575,15 +575,12 @@ async function openTopup() {
   document.getElementById('topupSummary').style.display = 'none';
   openOverlay('topupModal');
   if (!channels.length) {
-    try {
-      const d = await api('/balance/channels');
-      // API might return array directly or nested in data/channels
-      if (Array.isArray(d)) channels = d;
-      else if (Array.isArray(d.data)) channels = d.data;
-      else if (Array.isArray(d.channels)) channels = d.channels;
-      else channels = Object.values(d)[0] || [];
-      console.log('channels loaded:', channels);
-    } catch(e) { console.log('channels err:', e.message); }
+    try { 
+      const d = await api('/balance/channels'); 
+      channels = d.data || []; 
+    } catch(e) { 
+      console.log('DEBUG:', e); 
+    }
   }
   renderChannels();
 }
@@ -591,15 +588,10 @@ async function openTopup() {
 function renderChannels() {
   const g = document.getElementById('channelGrid');
   if (!channels.length) { g.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:.82rem;padding:.75rem">Tidak ada channel tersedia</div>`; return; }
-  g.innerHTML = channels.map(c => {
-    const code = c.code || c.id || c.channel_code || c.value || JSON.stringify(c);
-    const fee = c.fee || c.admin_fee || c.admin || 0;
-    const name = c.name || c.channel_name || code;
-    return `<div class="ch-item" id="ch-${esc(code)}" onclick="selectChannel('${esc(code)}',${fee})">
-      <div class="ch-name">${esc(name)}</div>
-      <div class="ch-fee">Admin: ${rp(fee)}</div>
-    </div>`;
-  }).join('');
+  g.innerHTML = channels.map(c => `<div class="ch-item" id="ch-${c.code}" onclick="selectChannel('${c.code}',${c.fee})">
+    <div class="ch-name">${esc(c.name)}</div>
+    <div class="ch-fee">Admin: ${rp(c.fee)}</div>
+  </div>`).join('');
 }
 
 function selectChannel(code, fee) {
@@ -649,7 +641,7 @@ async function submitTopup() {
     } else {
       showToast('✅ Top up berhasil!', 'success'); loadBalance();
     }
-  } catch (e) { alert('ERROR DETAIL: ' + e.message); showToast('❌ ' + e.message, 'error'); }
+  } catch (e) { showToast('❌ ' + e.message, 'error'); }
   finally { btn.disabled = false; btn.textContent = '💳 Buat Pembayaran'; }
 }
 
@@ -670,7 +662,7 @@ async function loadHistory() {
 }
 
 function trxRow(t) {
-  return `<div class="trx-item" onclick="openTrxDetail('${esc(t.ref_id)}')">
+  return `<div class="trx-item" onclick="openTrxDetail('${t.ref_id}')">
     <div>
       <div class="trx-inv">${esc(t.invoice||t.ref_id||'-')}</div>
       <div class="trx-ref">${esc(t.ref_id||'')}</div>
