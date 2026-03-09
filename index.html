@@ -595,7 +595,13 @@ function renderChannels() {
 }
 
 function selectChannel(code, fee) {
-  selectedChannel = { code, fee };
+  // Simpan channel dengan format yang benar
+  selectedChannel = { 
+    code: code,           // Kode channel untuk display
+    fee: fee,             // Fee untuk display
+    channel_code: code    // Untuk dikirim ke API
+  };
+  
   document.querySelectorAll('.ch-item').forEach(e => e.classList.remove('selected'));
   const el = document.getElementById('ch-'+code);
   if (el) el.classList.add('selected');
