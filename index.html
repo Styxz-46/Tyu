@@ -621,9 +621,19 @@ async function submitTopup() {
   const btn = document.getElementById('btnTopup');
   btn.disabled = true; btn.textContent = '⏳ Memproses...';
   try {
-    const d = await api('/balance', { method:'POST', body:JSON.stringify({ amount:amt, code:selectedChannel.code, channel:selectedChannel.code, payment_channel:selectedChannel.code, ref_id:'TOPUP-'+Date.now() }) });
+    // PERBAIKAN: Kirim parameter yang benar sesuai API
+    const d = await api('/balance', { 
+      method: 'POST', 
+      body: JSON.stringify({ 
+        amount: amt, 
+        channel_code: selectedChannel.code,  // Ganti 'code' dengan 'channel_code'
+        ref_id: 'TOPUP-' + Date.now() 
+      }) 
+    });
+    
     closeModal('topupModal');
     const url = d.data?.payment_url;
+    
     if (url) {
       document.getElementById('resultTitle').textContent = '💳 Link Pembayaran';
       document.getElementById('resultBody').innerHTML = `
@@ -635,14 +645,21 @@ async function submitTopup() {
         <a href="${esc(url)}" target="_blank" style="text-decoration:none;display:block;margin-bottom:8px">
           <button class="btn-primary">🔗 Bayar Sekarang</button>
         </a>
-        <div class="license-box"><button class="copy-btn" onclick="copyText(this.nextSibling.textContent)">Copy</button><span>${esc(url)}</span></div>
+        <div class="license-box">
+          <button class="copy-btn" onclick="copyText(this.nextSibling.textContent)">Copy</button>
+          <span>${esc(url)}</span>
+        </div>
         <button class="btn-secondary" onclick="closeModal('resultModal')">Tutup</button>`;
       openOverlay('resultModal');
     } else {
-      showToast('✅ Top up berhasil!', 'success'); loadBalance();
+      showToast('✅ Top up berhasil!', 'success'); 
+      loadBalance();
     }
-  } catch (e) { showToast('❌ ' + e.message, 'error'); }
-  finally { btn.disabled = false; btn.textContent = '💳 Buat Pembayaran'; }
+  } catch (e) { 
+    showToast('❌ ' + e.message, 'error'); 
+  } finally { 
+    btn.disabled = false; btn.textContent = '💳 Buat Pembayaran'; 
+  }
 }
 
 // HISTORY
