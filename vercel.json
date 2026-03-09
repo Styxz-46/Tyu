@@ -1,0 +1,18 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/sekalipay/:path*",
+      "destination": "https://sekalipay.com/api/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/sekalipay/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, X-APIKEY" }
+      ]
+    }
+  ]
+}
