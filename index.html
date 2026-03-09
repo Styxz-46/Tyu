@@ -616,7 +616,7 @@ async function submitTopup() {
   const btn = document.getElementById('btnTopup');
   btn.disabled = true; btn.textContent = '⏳ Memproses...';
   try {
-    const d = await api('/balance', { method:'POST', body:JSON.stringify({ amount:amt, code:selectedChannel.code, ref_id:'TOPUP-'+Date.now() }) });
+    const d = await api('/balance', { method:'POST', body:JSON.stringify({ amount:amt, code:selectedChannel.code, channel:selectedChannel.code, payment_channel:selectedChannel.code, ref_id:'TOPUP-'+Date.now() }) });
     closeModal('topupModal');
     const url = d.data?.payment_url;
     if (url) {
